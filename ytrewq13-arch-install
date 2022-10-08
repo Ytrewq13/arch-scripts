@@ -1,0 +1,63 @@
+#!/bin/sh
+
+# Check we are root
+[ "$(id -u)" -eq 0 ] || {
+    echo "Error: must be run as root" 1>&2
+    exit 1
+}
+
+# FIXME: work out some way of passing arguments to the chroot script
+chroot / /bin/bash < chroot_scripts/ytrewq13-local-setup.sh
+exit
+
+# Set the keyboard layout
+# TODO: make this interactive
+loadkeys uk
+
+# Verify the boot mode is UEFI
+[ -d /sys/firmware/efi/efivars ] || {
+    echo "Error: not booted in UEFI mode" 1>&2
+    exit 1
+}
+
+# Check if we are connected to the internet
+ping -i 0.1 -c 5 -W 0.5 -q archlinux.org || {
+    echo "Error: please connect to the internet and try again" 1>&2
+    exit 1
+}
+# TODO: connect to the internet (guided)
+
+# Enable NTP
+timedatectl set-ntp true
+
+# TODO: partition the disks (guided)
+
+# TODO: Installation guide steps:
+# - keyboard layout
+# - verify the boot mode (UEFI/BIOS)
+# - check internet connection? Or interactively connect to the internet?
+# - system clock (NTP)
+# - partition the disks
+#   - optionally encrypt the root partition (dm-crypt)
+# - format the partitions
+#   - select filesystems (/boot should be FAT32, / can be ext4/btrfs/others)
+# - mount the partitions
+# - mirror selection (reflector - make backup)
+# - pacstrap (install the base packages)
+# - generate fstab
+# - arch-chroot? (can we pass commands to run inside the chroot?) - TODO: put
+# chroot commands into their own script, copy the script before chroot-ing, and
+# specify it as the chroot command
+# - generate /etc/adjtime (use --adjfile option if not chroot-ing)
+#   - `hwclock --adjfile=/mnt/etc/adjtime --systohc`
+# - generate the locale
+#   - uncomment lines in /etc/locale.gen
+#   - run `locale-gen`
+#   - create /etc/locale.conf
+#   - persist console keyboard layout changes: /etc/vconsole.conf
+# - set the hostname
+# - mkinitcpio -P (only needed for system encryption?)
+# - set a root password (chpasswd)
+# TODO: Install software from a list (using pacman, then install AUR software - use yay?)
+
+#arch-chroot /mnt /bin/bash
